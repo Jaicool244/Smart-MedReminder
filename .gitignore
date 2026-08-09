@@ -1,22 +1,31 @@
-# Environment files
-.env
-.env.*
-!.env.example
-
 # Python
-__pycache__/
-.pytest_cache/
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
 *.pyc
-venv/
-.venv/
 
-# Flutter/Dart
-.dart_tool/
-build/
-*.lock
+# Python environment / secrets
+backend/.env
+backend/.env.*
+!backend/.env.example
 
-# IDE and OS-specific files
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.idea/
+
+# Android generated files
+mobile/android/.gradle/
+mobile/android/local.properties/
+mobile/android/app/build/
+
+# IDE
 .vscode/
 .idea/
+
+# OS
 .DS_Store
 Thumbs.db
