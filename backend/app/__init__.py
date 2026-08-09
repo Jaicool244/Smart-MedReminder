@@ -1,0 +1,1 @@
+"""Smart MedReminder backend package."""
