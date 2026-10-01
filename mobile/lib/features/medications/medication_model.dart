@@ -8,6 +8,8 @@ class Medication {
   final String reminderTime;
   final String frequency;
   final int notificationId;
+  final int? quantity;
+  final DateTime? createdAt;
 
   const Medication({
     required this.id,
@@ -16,6 +18,8 @@ class Medication {
     required this.reminderTime,
     required this.frequency,
     required this.notificationId,
+    this.quantity,
+    this.createdAt,
   });
 
   Medication copyWith({
@@ -25,6 +29,8 @@ class Medication {
     String? reminderTime,
     String? frequency,
     int? notificationId,
+    int? quantity,
+    DateTime? createdAt,
   }) {
     return Medication(
       id: id ?? this.id,
@@ -33,6 +39,8 @@ class Medication {
       reminderTime: reminderTime ?? this.reminderTime,
       frequency: frequency ?? this.frequency,
       notificationId: notificationId ?? this.notificationId,
+      quantity: quantity ?? this.quantity,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -43,6 +51,8 @@ class Medication {
         'reminderTime': reminderTime,
         'frequency': frequency,
         'notificationId': notificationId,
+        if (quantity != null) 'quantity': quantity,
+        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       };
 
   factory Medication.fromJson(Map<String, dynamic> json) {
@@ -63,6 +73,10 @@ class Medication {
       notificationId: json['notificationId'] is int
           ? json['notificationId'] as int
           : (safeId.hashCode & 0x7fffffff),
+      quantity: json['quantity'] is int ? json['quantity'] as int : null,
+        createdAt: json['createdAt'] is String
+          ? DateTime.tryParse(json['createdAt'] as String)
+          : null,
     );
   }
 }

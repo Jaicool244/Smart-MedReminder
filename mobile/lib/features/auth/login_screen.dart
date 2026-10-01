@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_medreminder/app/routes.dart';
 import 'package:smart_medreminder/core/constants/app_constants.dart';
-import 'package:smart_medreminder/core/services/api_service.dart';
+import 'package:smart_medreminder/core/services/local_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await ApiService.login(
+      await LocalAuthService.instance.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );

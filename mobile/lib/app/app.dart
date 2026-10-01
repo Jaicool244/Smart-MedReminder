@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_medreminder/app/routes.dart';
+import 'package:smart_medreminder/core/services/local_auth_service.dart';
+import 'package:smart_medreminder/features/home/home_screen.dart';
 
 class SmartMedReminderApp extends StatelessWidget {
   const SmartMedReminderApp({super.key});
@@ -10,7 +12,27 @@ class SmartMedReminderApp extends StatelessWidget {
       title: 'Smart MedReminder',
       debugShowCheckedModeBanner: false,
       onGenerateRoute: AppRoutes.onGenerateRoute,
-      home: const WelcomeScreen(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<LocalUser?>(
+      future: LocalAuthService.instance.currentUser(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return snapshot.data == null ? const WelcomeScreen() : const HomeScreen();
+      },
     );
   }
 }

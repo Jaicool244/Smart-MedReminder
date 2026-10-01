@@ -4,9 +4,32 @@ import 'package:smart_medreminder/core/services/medication_reminder_service.dart
 import 'package:smart_medreminder/features/medications/medication_model.dart';
 
 class AddMedicationScreen extends StatefulWidget {
-  const AddMedicationScreen({super.key, this.medication});
+  const AddMedicationScreen({
+    super.key,
+    this.medication,
+    this.detectedText,
+    this.initialName = '',
+    this.initialDosage = '',
+    this.initialFrequency,
+    this.initialReminderTime,
+  });
 
   final Medication? medication;
+  final String? detectedText;
+  final String initialName;
+  final String initialDosage;
+  final String? initialFrequency;
+  final String? initialReminderTime;
+
+  const AddMedicationScreen.fromPrescription({
+    super.key,
+    this.medication,
+    required this.detectedText,
+    this.initialName = '',
+    this.initialDosage = '',
+    this.initialFrequency,
+    this.initialReminderTime,
+  });
 
   @override
   State<AddMedicationScreen> createState() => _AddMedicationScreenState();
@@ -17,7 +40,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   final nameController = TextEditingController();
   final dosageController = TextEditingController();
 
-  TimeOfDay selectedTime = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay? selectedTime = const TimeOfDay(hour: 8, minute: 0);
   String frequency = 'Every day';
   bool saving = false;
 
@@ -37,13 +60,26 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         final minute = int.tryParse(parts[1]) ?? 0;
         selectedTime = TimeOfDay(hour: hour, minute: minute);
       }
+    } else if (widget.detectedText != null) {
+      nameController.text = widget.initialName;
+      dosageController.text = widget.initialDosage;
+      frequency = widget.initialFrequency ?? '';
+      final parts = widget.initialReminderTime?.split(':');
+      if (parts != null && parts.length == 2) {
+        selectedTime = TimeOfDay(
+          hour: int.tryParse(parts[0]) ?? 8,
+          minute: int.tryParse(parts[1]) ?? 0,
+        );
+      } else {
+        selectedTime = null;
+      }
     }
   }
 
   Future<void> pickTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: selectedTime,
+      initialTime: selectedTime ?? TimeOfDay.now(),
     );
 
     if (picked != null) {
@@ -72,7 +108,14 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     try {
       final name = nameController.text.trim();
       final dosage = dosageController.text.trim();
-      final reminderTime = '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+      final time = selectedTime;
+      if (time == null) {
+        throw Exception('Please select a reminder time.');
+      }
+      if (frequency.isEmpty) {
+        throw Exception('Please select a frequency.');
+      }
+      final reminderTime = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
       final existing = widget.medication;
 
@@ -83,6 +126,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         reminderTime: reminderTime,
         frequency: frequency,
         notificationId: existing?.notificationId ?? DateTime.now().millisecondsSinceEpoch.hashCode,
+        quantity: existing?.quantity,
+        createdAt: existing?.createdAt ?? DateTime.now(),
       );
 
       final existingList = await MedicationStorage.load();
@@ -149,7 +194,13 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.medication == null ? 'Add Medication' : 'Edit Medication'),
+        title: Text(
+          widget.detectedText != null
+              ? 'Prescription Review'
+              : widget.medication == null
+                  ? 'Add Medication'
+                  : 'Edit Medication',
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -159,8 +210,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Add Medication',
+                Text(
+                  widget.detectedText != null ? 'Prescription Review' : 'Add Medication',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -168,6 +219,26 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 ),
 
                 const SizedBox(height: 24),
+
+                if (widget.detectedText != null) ...[
+                  const Text(
+                    'Review and correct the detected details before adding this medication.',
+                  ),
+                  const SizedBox(height: 16),
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: const Text('Detected text'),
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        child: Text(widget.detectedText!),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 TextFormField(
                   controller: nameController,
@@ -214,7 +285,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                       border: OutlineInputBorder(),
                     ),
                     child: Text(
-                      selectedTime.format(context),
+                      selectedTime?.format(context) ?? 'Select a reminder time',
                     ),
                   ),
                 ),
@@ -222,7 +293,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<String>(
-                  initialValue: frequency,
+                  initialValue: frequency.isEmpty ? null : frequency,
                   decoration: const InputDecoration(
                     labelText: 'Frequency',
                     prefixIcon: Icon(Icons.repeat),
@@ -246,6 +317,12 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                       child: Text('Weekly'),
                     ),
                   ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a frequency.';
+                    }
+                    return null;
+                  },
                   onChanged: (value) {
                     if (value != null) {
                       setState(() {
@@ -268,7 +345,11 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Save Medication'),
+                        : Text(
+                            widget.detectedText != null
+                                ? 'Confirm & Add Medication'
+                                : 'Save Medication',
+                          ),
                   ),
                 ),
               ],

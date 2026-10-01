@@ -125,6 +125,29 @@ class MedicationReminderService {
     }
   }
 
+  Future<void> scheduleTestNotification() async {
+    await initialize();
+
+    const androidDetails = AndroidNotificationDetails(
+      'smart_medreminder_channel',
+      'Smart MedReminder Medication Reminders',
+      channelDescription: 'Notifications for medication reminders',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+    );
+    const notificationDetails = NotificationDetails(android: androidDetails);
+
+    await _notifications.zonedSchedule(
+      2147483000,
+      'Smart MedReminder',
+      'Test medication reminder',
+      tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)),
+      notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+
   Future<void> cancelMedication(Medication medication) async {
     try {
       await initialize();

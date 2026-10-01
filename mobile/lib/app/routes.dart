@@ -3,6 +3,7 @@ import 'package:smart_medreminder/features/auth/login_screen.dart';
 import 'package:smart_medreminder/features/auth/registration_screen.dart';
 import 'package:smart_medreminder/features/home/home_screen.dart';
 import 'package:smart_medreminder/features/medications/medication_screen.dart';
+import 'package:smart_medreminder/features/scanner/prescription_scanner_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -10,6 +11,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String addMedication = '/add-medication';
   static const String medications = '/medications';
+  static const String scanPrescription = '/scan-prescription';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -40,6 +42,12 @@ class AppRoutes {
       case medications:
         return MaterialPageRoute(
           builder: (_) => const MedicationListScreen(),
+          settings: settings,
+        );
+
+      case scanPrescription:
+        return MaterialPageRoute(
+          builder: (_) => const PrescriptionScannerScreen(),
           settings: settings,
         );
 
